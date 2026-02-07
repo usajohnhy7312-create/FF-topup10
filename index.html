@@ -11,9 +11,12 @@
         [x-cloak] { display: none !important; }
         body { background-color: #020617; color: white; font-family: sans-serif; }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body x-data="appData()" x-cloak>
+<body x-data="appData()" x-init="initLucide()" x-cloak>
 
     <template x-if="!isLoggedIn">
         <div class="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -23,9 +26,10 @@
             </div>
 
             <div class="w-full max-w-sm z-10">
-                <div class="text-center mb-10">
-                    <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-2xl mx-auto flex items-center justify-center shadow-xl shadow-orange-900/20 mb-4">
-                        <i data-lucide="flame" class="w-10 h-10 text-white"></i>
+                <div class="text-center mb-8">
+                    <div class="w-28 h-28 mx-auto mb-6 relative">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-yellow-500 to-orange-600 rounded-full blur opacity-50 animate-pulse-slow"></div>
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User Photo" class="w-full h-full rounded-full border-4 border-slate-900 bg-slate-800 relative z-10 object-cover shadow-2xl">
                     </div>
                     <h1 class="text-3xl font-black text-white tracking-tight">FF PRO STORE</h1>
                     <p class="text-slate-400 mt-2">Premium Top-up Center</p>
@@ -33,12 +37,12 @@
 
                 <form @submit.prevent="login()" class="space-y-4">
                     <div class="space-y-2">
-                        <label class="text-xs uppercase text-slate-500 font-bold tracking-wider">Player ID / Email</label>
-                        <input required type="text" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-yellow-500" placeholder="Enter your Game ID">
+                        <label class="text-xs uppercase text-slate-500 font-bold tracking-wider">Username / Email</label>
+                        <input required x-model="loginForm.username" type="text" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-yellow-500 transition-colors" placeholder="Enter username">
                     </div>
                     <div class="space-y-2">
                         <label class="text-xs uppercase text-slate-500 font-bold tracking-wider">Password</label>
-                        <input required type="password" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-yellow-500" placeholder="••••••••">
+                        <input required x-model="loginForm.password" type="password" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-yellow-500 transition-colors" placeholder="••••••••">
                     </div>
 
                     <button type="submit" :disabled="loading" class="w-full bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-bold py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-6">
@@ -51,7 +55,7 @@
     </template>
 
     <template x-if="isLoggedIn">
-        <div class="max-w-md mx-auto min-h-screen pb-24">
+        <div class="max-w-md mx-auto min-h-screen pb-24 relative">
             <header class="sticky top-0 z-40 w-full bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
                 <div class="flex items-center justify-between px-4 py-3">
                     <div class="flex items-center gap-2">
@@ -59,17 +63,14 @@
                             <i data-lucide="user" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <h2 class="text-sm font-bold text-white leading-none">ProGamer_99</h2>
-                            <p class="text-xs text-slate-400 leading-none mt-1">ID: 283746519</p>
+                            <h2 class="text-sm font-bold text-white leading-none" x-text="user.username"></h2>
+                            <p class="text-xs text-slate-400 leading-none mt-1">ID: <span x-text="user.uid"></span></p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <a href="https://t.me/rajeshff01" target="_blank" class="p-2 bg-blue-600/20 rounded-full text-blue-400 hover:bg-blue-600/30">
-                            <i data-lucide="headphones" class="w-4 h-4"></i>
-                        </a>
                         <div class="flex items-center gap-1 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
                             <i data-lucide="wallet" class="w-4 h-4 text-emerald-400"></i>
-                            <span class="text-sm font-bold text-white">₹<span x-text="balance"></span></span>
+                            <span class="text-sm font-bold text-white">₹<span x-text="user.balance"></span></span>
                         </div>
                         <button @click="logout()" class="p-2 text-slate-400"><i data-lucide="log-out" class="w-5 h-5"></i></button>
                     </div>
@@ -78,49 +79,46 @@
 
             <main class="p-4">
                 <div x-show="activeTab === 'topup'">
-                    <h2 class="text-xl font-bold mb-4">Instant Top-up</h2>
-                    <div class="grid grid-cols-2 gap-3">
-                        <template x-for="pack in diamondPacks" :key="pack.id">
-                            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-3 relative cursor-pointer hover:border-yellow-500/50">
-                                <div x-show="pack.tag" class="absolute top-0 right-0 bg-yellow-600 text-[10px] font-bold px-2 py-1 rounded-bl-lg" x-text="pack.tag"></div>
-                                <i data-lucide="gem" class="w-10 h-10 text-cyan-400"></i>
-                                <div class="text-center">
-                                    <div class="text-xl font-black" x-text="pack.amount"></div>
-                                    <div class="text-[10px] text-yellow-400" x-text="`+${pack.bonus} Bonus`"></div>
+                    <div x-show="purchaseStep === 'list'">
+                        <h2 class="text-xl font-bold mb-4">Instant Top-up</h2>
+                        <div class="grid grid-cols-2 gap-3">
+                            <template x-for="pack in diamondPacks" :key="pack.id">
+                                <div @click="selectPack(pack)" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-3 cursor-pointer hover:border-yellow-500/50 hover:bg-slate-800 transition-all active:scale-95">
+                                    <i data-lucide="gem" class="w-10 h-10 text-cyan-400"></i>
+                                    <div class="text-center">
+                                        <div class="text-lg font-black leading-tight" x-text="pack.amount"></div>
+                                        <div class="text-[10px] text-yellow-400" x-text="pack.bonus > 0 ? `+${pack.bonus} Bonus` : 'Best Value'"></div>
+                                    </div>
+                                    <div class="w-full text-center">
+                                        <span class="text-sm font-bold">₹<span x-text="pack.price"></span></span>
+                                        <button class="mt-2 w-full py-1.5 bg-yellow-500 text-black rounded-lg text-xs font-bold">BUY NOW</button>
+                                    </div>
                                 </div>
-                                <div class="w-full text-center">
-                                    <span class="text-xs text-slate-500 line-through">₹<span x-text="pack.originalPrice"></span></span>
-                                    <span class="text-sm font-bold">₹<span x-text="pack.price"></span></span>
-                                    <div class="mt-2 py-1.5 bg-slate-800 rounded-lg text-xs font-bold text-slate-300">BUY NOW</div>
-                                </div>
-                            </div>
-                        </template>
+                            </template>
+                        </div>
                     </div>
-                </div>
 
-                <div x-show="activeTab === 'membership'">
-                    <h2 class="text-xl font-bold mb-4">Premium Memberships</h2>
-                    <div class="space-y-4">
-                        <template x-for="plan in memberships" :key="plan.id">
-                            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 relative overflow-hidden">
-                                <div class="flex items-center gap-3 mb-6">
-                                    <div :class="`p-3 rounded-xl bg-gradient-to-br ${plan.color}`">
-                                        <i :data-lucide="plan.icon" class="w-6 h-6 text-white"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-lg" x-text="plan.title"></h3>
-                                        <p class="text-slate-400 text-xs">Reset at 03:00 AM</p>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between items-end">
-                                    <div>
-                                        <p class="text-xs text-slate-400 uppercase">Total Rewards</p>
-                                        <p class="text-2xl font-black text-white" x-text="plan.totalDiamonds"></p>
-                                    </div>
-                                    <button :class="`px-6 py-3 rounded-xl font-bold bg-gradient-to-r ${plan.color}`">Subscribe</button>
-                                </div>
+                    <div x-show="purchaseStep === 'confirm'" class="min-h-[60vh] flex flex-col">
+                        <button @click="purchaseStep = 'list'" class="flex items-center text-slate-400 mb-4"><i data-lucide="arrow-left" class="w-5 h-5 mr-1"></i> Back</button>
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-6">
+                            <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-800">
+                                <span class="text-slate-400">Item</span>
+                                <span class="font-bold" x-text="selectedPack?.amount"></span>
                             </div>
-                        </template>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">Total</span>
+                                <span class="font-bold text-yellow-500">₹<span x-text="selectedPack?.price"></span></span>
+                            </div>
+                        </div>
+                        <input type="text" x-model="uidInput" placeholder="Enter Player UID" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-4 text-white text-lg focus:border-yellow-500 outline-none">
+                        <button @click="submitOrder()" :disabled="!uidInput || user.balance < selectedPack?.price" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl mt-6 disabled:opacity-50">CONFIRM PURCHASE</button>
+                    </div>
+
+                    <div x-show="purchaseStep === 'success'" class="text-center py-20">
+                        <div class="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="check" class="text-green-500 w-10 h-10"></i></div>
+                        <h2 class="text-2xl font-bold">ORDER SUBMITTED</h2>
+                        <p class="text-slate-400 mt-2">Processing your request...</p>
+                        <button @click="resetPurchase()" class="mt-8 text-yellow-500 underline">Back to Store</button>
                     </div>
                 </div>
 
@@ -128,47 +126,41 @@
                     <div x-show="depositStep === 'select'">
                         <h2 class="text-xl font-bold mb-4">Add Funds</h2>
                         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center">
-                            <p class="text-slate-400 text-sm mb-2">Enter Amount</p>
-                            <input type="number" x-model="depositAmount" class="bg-transparent text-4xl font-bold text-white w-full text-center focus:outline-none mb-6" placeholder="0">
-                            <button @click="depositStep = 'payment'" class="w-full bg-emerald-500 py-4 rounded-xl font-bold shadow-lg">Confirm</button>
+                            <input type="number" x-model="depositAmount" class="bg-transparent text-4xl font-bold text-white w-full text-center focus:outline-none mb-6" placeholder="₹0">
+                            <button @click="depositStep = 'payment'" class="w-full bg-emerald-500 text-white py-4 rounded-xl font-bold">Continue</button>
                         </div>
                     </div>
+                    <div x-show="depositStep === 'payment'" class="text-center">
+                         <div class="bg-white p-4 rounded-xl inline-block mb-6">
+                            <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=Rajeshff0@ybl&am=${depositAmount}`">
+                        </div>
+                        <p class="mb-4">Scan & Pay ₹<span x-text="depositAmount"></span></p>
+                        <input type="text" x-model="utr" placeholder="Enter Transaction UTR" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-4 mb-4 outline-none">
+                        <button @click="submitDeposit()" class="w-full bg-yellow-500 text-black font-bold py-4 rounded-xl">Submit UTR</button>
+                    </div>
+                </div>
 
-                    <div x-show="depositStep === 'payment'" class="space-y-6">
-                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center">
-                            <p class="text-3xl font-black text-yellow-500 mb-4">₹<span x-text="depositAmount"></span></p>
-                            <div class="bg-white p-4 rounded-xl mb-4">
-                                <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=Rajeshff0@ybl&am=${depositAmount}`" class="w-48 h-48">
+                <div x-show="activeTab === 'history'">
+                    <h2 class="text-xl font-bold mb-4">Transactions</h2>
+                    <div class="space-y-3">
+                        <template x-for="txn in user.transactions" :key="txn.date">
+                            <div class="bg-slate-900 p-4 rounded-xl flex justify-between">
+                                <div>
+                                    <p class="font-bold text-sm" x-text="txn.desc"></p>
+                                    <p class="text-xs text-slate-500" x-text="txn.status"></p>
+                                </div>
+                                <p class="font-bold" :class="txn.type === 'deposit' ? 'text-emerald-400' : 'text-red-400'" x-text="(txn.type === 'deposit' ? '+' : '-') + ' ₹' + txn.amount"></p>
                             </div>
-                            <input type="text" x-model="utr" placeholder="Enter 12-digit UTR" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-4 text-center">
-                            <button @click="depositStep = 'success'" class="w-full bg-yellow-500 text-black font-bold py-4 rounded-xl mt-4">Submit Payment</button>
-                        </div>
-                    </div>
-
-                    <div x-show="depositStep === 'success'" class="text-center py-10">
-                        <i data-lucide="check-circle-2" class="w-20 h-20 text-green-500 mx-auto mb-4"></i>
-                        <h2 class="text-2xl font-bold">Payment Submitted</h2>
-                        <p class="text-slate-400 mt-2">Please wait 5-10 minutes</p>
-                        <button @click="depositStep = 'select'" class="mt-6 text-yellow-500">Back to Deposit</button>
+                        </template>
                     </div>
                 </div>
             </main>
 
-            <div class="fixed bottom-0 w-full z-40 bg-slate-900 border-t border-slate-800 pb-safe">
-                <div class="flex justify-around items-center max-w-md mx-auto">
-                    <button @click="activeTab = 'topup'" :class="activeTab === 'topup' ? 'text-yellow-500' : 'text-slate-500'" class="flex flex-col items-center py-3 w-full">
-                        <i data-lucide="gem" class="w-6 h-6"></i>
-                        <span class="text-[10px] mt-1">TOP UP</span>
-                    </button>
-                    <button @click="activeTab = 'membership'" :class="activeTab === 'membership' ? 'text-yellow-500' : 'text-slate-500'" class="flex flex-col items-center py-3 w-full">
-                        <i data-lucide="crown" class="w-6 h-6"></i>
-                        <span class="text-[10px] mt-1">MEMBER</span>
-                    </button>
-                    <button @click="activeTab = 'deposit'" :class="activeTab === 'deposit' ? 'text-yellow-500' : 'text-slate-500'" class="flex flex-col items-center py-3 w-full">
-                        <i data-lucide="wallet" class="w-6 h-6"></i>
-                        <span class="text-[10px] mt-1">DEPOSIT</span>
-                    </button>
-                </div>
+            <div class="fixed bottom-0 w-full bg-slate-900 border-t border-slate-800 flex justify-around py-3">
+                <button @click="activeTab = 'topup'" :class="activeTab === 'topup' ? 'text-yellow-500' : 'text-slate-500'"><i data-lucide="gem"></i></button>
+                <button @click="activeTab = 'deposit'" :class="activeTab === 'deposit' ? 'text-yellow-500' : 'text-slate-500'"><i data-lucide="wallet"></i></button>
+                <button @click="activeTab = 'history'" :class="activeTab === 'history' ? 'text-yellow-500' : 'text-slate-500'"><i data-lucide="history"></i></button>
+                <a href="https://t.me/Rajeshff0" target="_blank" class="text-slate-500 hover:text-blue-400"><i data-lucide="headset"></i></a>
             </div>
         </div>
     </template>
@@ -179,36 +171,69 @@
                 isLoggedIn: false,
                 loading: false,
                 activeTab: 'topup',
-                balance: 0,
+                purchaseStep: 'list',
                 depositStep: 'select',
-                depositAmount: '',
-                utr: '',
+                loginForm: { username: '', password: '' },
+                user: { username: 'Guest', uid: '102938', balance: 0, transactions: [] },
                 diamondPacks: [
-                    { id: 1, amount: 100, bonus: 10, price: 80, originalPrice: 100, tag: 'Best Seller' },
-                    { id: 2, amount: 310, bonus: 31, price: 240, originalPrice: 300, tag: 'Popular' },
-                    { id: 3, amount: 520, bonus: 52, price: 400, originalPrice: 500, tag: 'Value' },
-                    { id: 4, amount: 1060, bonus: 106, price: 800, originalPrice: 1000, tag: null },
-                    { id: 5, amount: 2180, bonus: 218, price: 1600, originalPrice: 2000, tag: 'Pro' },
-                    { id: 6, amount: 5600, bonus: 560, price: 4000, originalPrice: 5000, tag: 'Whale' }
+                    { id: 1, amount: '100 Gems', price: 80, bonus: 10 },
+                    { id: 2, amount: '310 Gems', price: 240, bonus: 30 },
+                    { id: 3, amount: '520 Gems', price: 400, bonus: 50 },
+                    { id: 4, amount: '1060 Gems', price: 800, bonus: 120 }
                 ],
-                memberships: [
-                    { id: 'weekly', title: 'Weekly Membership', totalDiamonds: 450, price: 159, color: 'from-blue-600 to-cyan-500', icon: 'gem' },
-                    { id: 'monthly', title: 'Monthly Membership', totalDiamonds: 2600, price: 799, color: 'from-yellow-600 to-amber-500', icon: 'crown' }
-                ],
+                selectedPack: null,
+                uidInput: '',
+                depositAmount: 100,
+                utr: '',
+
+                initLucide() {
+                    lucide.createIcons();
+                },
                 login() {
                     this.loading = true;
                     setTimeout(() => {
                         this.isLoggedIn = true;
+                        this.user.username = this.loginForm.username;
                         this.loading = false;
-                        this.$nextTick(() => lucide.createIcons());
+                        setTimeout(() => this.initLucide(), 100);
                     }, 1000);
+                },
+                selectPack(pack) {
+                    this.selectedPack = pack;
+                    this.purchaseStep = 'confirm';
+                    setTimeout(() => this.initLucide(), 50);
+                },
+                submitOrder() {
+                    this.user.balance -= this.selectedPack.price;
+                    this.user.transactions.push({
+                        desc: `Purchase ${this.selectedPack.amount}`,
+                        amount: this.selectedPack.price,
+                        type: 'buy',
+                        status: 'Pending',
+                        date: new Date()
+                    });
+                    this.purchaseStep = 'success';
+                    setTimeout(() => this.initLucide(), 50);
+                },
+                submitDeposit() {
+                    this.user.transactions.push({
+                        desc: 'Deposit Wallet',
+                        amount: this.depositAmount,
+                        type: 'deposit',
+                        status: 'Processing',
+                        date: new Date()
+                    });
+                    alert('Deposit request submitted! Waiting for verification.');
+                    this.depositStep = 'select';
+                },
+                resetPurchase() {
+                    this.purchaseStep = 'list';
+                    this.selectedPack = null;
+                    this.uidInput = '';
+                    setTimeout(() => this.initLucide(), 50);
                 },
                 logout() {
                     this.isLoggedIn = false;
-                    this.activeTab = 'topup';
-                },
-                init() {
-                    lucide.createIcons();
                 }
             }
         }
