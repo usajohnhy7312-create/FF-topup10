@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF Pro Shop | Diamonds</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #020617; color: white; font-family: sans-serif; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center px-4">
+        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 w-full max-w-md shadow-2xl">
+            <h2 class="text-2xl font-bold text-center mb-6 text-emerald-400">Welcome to Pro Shop</h2>
+            <div class="space-y-4">
+                <input type="text" id="username" placeholder="Game Name/Username" class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg outline-none focus:border-emerald-500">
+                <input type="password" id="password" placeholder="Password" class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg outline-none focus:border-emerald-500">
+                <button onclick="handleAuth()" class="w-full bg-emerald-500 hover:bg-emerald-600 font-bold py-3 rounded-lg transition-all">Sign Up / Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content" class="hidden">
+        <header class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center sticky top-0 z-40">
+            <div>
+                <p class="text-xs text-slate-400">Welcome back,</p>
+                <p id="display-name" class="font-bold text-emerald-400"></p>
+            </div>
+            <button onclick="logout()" class="text-slate-400 text-sm border border-slate-700 px-3 py-1 rounded">Logout</button>
+        </header>
+
+        <main class="max-w-md mx-auto p-4 pb-24">
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl mb-6 text-center">
+                <p class="text-slate-400 text-sm">Wallet Balance</p>
+                <h1 class="text-4xl font-black mt-1">₹<span id="balance">0</span></h1>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="font-bold text-slate-400 uppercase text-xs tracking-widest">Select Top-up Amount</h3>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="setAmount(100)" class="bg-slate-800 py-3 rounded-lg hover:bg-slate-700 border border-slate-700">₹100</button>
+                    <button onclick="setAmount(500)" class="bg-slate-800 py-3 rounded-lg hover:bg-slate-700 border border-slate-700">₹500</button>
+                    <button onclick="setAmount(1000)" class="bg-slate-800 py-3 rounded-lg hover:bg-slate-700 border border-slate-700">₹1000</button>
+                </div>
+                <button onclick="proceedToPay()" class="w-full bg-emerald-500 py-4 rounded-xl font-bold shadow-lg shadow-emerald-900/40">Proceed to Pay</button>
+            </div>
+        </main>
+
+        <a href="https://t.me/Rajeshff0" target="_blank" class="fixed bottom-6 right-6 bg-blue-500 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-50">
+            <i class="fa-brands fa-telegram text-3xl"></i>
+        </a>
+    </div>
+
+    <script>
+        // Check if user is already logged in
+        window.onload = function() {
+            const savedUser = localStorage.getItem('user');
+            if (savedUser) {
+                showMainContent(savedUser);
+            }
+        }
+
+        function handleAuth() {
+            const name = document.getElementById('username').value;
+            if (name.length < 3) {
+                alert("Please enter a valid name");
+                return;
+            }
+            // Save to LocalStorage (Isse automatic logout nahi hoga)
+            localStorage.setItem('user', name);
+            showMainContent(name);
+        }
+
+        function showMainContent(name) {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('display-name').innerText = name;
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            location.reload();
+        }
+
+        function setAmount(amt) {
+            alert("Selected: ₹" + amt);
+        }
+
+        function proceedToPay() {
+            alert("Redirecting to Payment Gateway...");
+        }
+    </script>
+</body>
+</html>
