@@ -1,511 +1,249 @@
-import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Gamepad2, 
-  Gem, 
-  Crown, 
-  Wallet, 
-  User, 
-  ChevronRight, 
-  LogOut,
-  CreditCard,
-  QrCode,
-  History,
-  ShieldCheck,
-  Flame,
-  Headphones,
-  CheckCircle2,
-  AlertCircle
-} from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-// --- Utility --- 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-// --- Mock Data ---
-const DIAMOND_PACKS = [
-  { id: 1, amount: 100, bonus: 10, price: 80, originalPrice: 100, tag: 'Best Seller' },
-  { id: 2, amount: 310, bonus: 31, price: 240, originalPrice: 300, tag: 'Popular' },
-  { id: 3, amount: 520, bonus: 52, price: 400, originalPrice: 500, tag: 'Value' },
-  { id: 4, amount: 1060, bonus: 106, price: 800, originalPrice: 1000, tag: null },
-  { id: 5, amount: 2180, bonus: 218, price: 1600, originalPrice: 2000, tag: 'Pro' },
-  { id: 6, amount: 5600, bonus: 560, price: 4000, originalPrice: 5000, tag: 'Whale' },
-];
-
-const MEMBERSHIPS = [
-  { 
-    id: 'weekly', 
-    title: 'Weekly Membership', 
-    totalDiamonds: 450, 
-    daily: 60, 
-    price: 159, 
-    originalPrice: 199,
-    color: 'from-blue-600 to-cyan-500',
-    icon: <Gem className="w-6 h-6 text-white" />
-  },
-  { 
-    id: 'monthly', 
-    title: 'Monthly Membership', 
-    totalDiamonds: 2600, 
-    daily: 85, 
-    price: 799, 
-    originalPrice: 999,
-    color: 'from-yellow-600 to-amber-500',
-    icon: <Crown className="w-6 h-6 text-white" />
-  }
-];
-
-// --- Components ---
-
-const Header = ({ balance, user, onLogout }: any) => (
-  <header className="sticky top-0 z-40 w-full bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
-    <div className="flex items-center justify-between px-4 py-3 max-w-md mx-auto">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-500 to-yellow-500 flex items-center justify-center">
-           <User className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h2 className="text-sm font-bold text-white leading-none">{user.name}</h2>
-          <p className="text-xs text-slate-400 leading-none mt-1">ID: {user.gameId}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        {/* Customer Support Link */}
-        <a 
-          href="https://t.me/rajeshff01" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="p-2 bg-blue-600/20 rounded-full text-blue-400 hover:text-blue-300 hover:bg-blue-600/30 transition-colors"
-        >
-          <Headphones className="w-4 h-4" />
-        </a>
-        
-        <div className="flex items-center gap-1 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
-          <Wallet className="w-4 h-4 text-emerald-400" />
-          <span className="text-sm font-bold text-white">₹{balance}</span>
-        </div>
-        <button onClick={onLogout} className="p-2 text-slate-400 hover:text-white">
-          <LogOut className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
-  </header>
-);
-
-const BottomNav = ({ activeTab, setActiveTab }: any) => {
-  const navItems = [
-    { id: 'topup', label: 'Top Up', icon: <Gem /> },
-    { id: 'membership', label: 'Member', icon: <Crown /> },
-    { id: 'deposit', label: 'Deposit', icon: <Wallet /> },
-  ];
-
-  return (
-    <div className="fixed bottom-0 w-full z-40 bg-slate-900 border-t border-slate-800 pb-safe">
-      <div className="flex justify-around items-center max-w-md mx-auto">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={cn(
-              "flex flex-col items-center justify-center w-full py-3 transition-colors",
-              activeTab === item.id ? "text-yellow-500" : "text-slate-500 hover:text-slate-300"
-            )}
-          >
-            {React.cloneElement(item.icon as any, { 
-              className: cn("w-6 h-6 mb-1", activeTab === item.id && "fill-current") 
-            })}
-            <span className="text-[10px] font-medium uppercase tracking-wider">{item.label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const LoginScreen = ({ onLogin }: any) => {
-  const [loading, setLoading] = useState(false);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      onLogin();
-      setLoading(false);
-    }, 1500);
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute -top-[20%] -right-[20%] w-[500px] h-[500px] bg-orange-600/20 rounded-full blur-[100px]" />
-        <div className="absolute -bottom-[20%] -left-[20%] w-[500px] h-[500px] bg-yellow-600/10 rounded-full blur-[100px]" />
-      </div>
-
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm z-10"
-      >
-        <div className="text-center mb-10">
-          <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-2xl mx-auto flex items-center justify-center shadow-xl shadow-orange-900/20 mb-4">
-            <Flame className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">FF PRO STORE</h1>
-          <p className="text-slate-400 mt-2">Premium Top-up Center</p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-xs uppercase text-slate-500 font-bold tracking-wider">Player ID / Email</label>
-            <input 
-              required 
-              type="text" 
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-yellow-500 transition-colors"
-              placeholder="Enter your Game ID"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-xs uppercase text-slate-500 font-bold tracking-wider">Password</label>
-            <input 
-              required 
-              type="password" 
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-yellow-500 transition-colors"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button 
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-900/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-6"
-          >
-            {loading ? 'Authenticating...' : 'Sign Up / Login'}
-            {!loading && <ChevronRight className="w-5 h-5" />}
-          </button>
-        </form>
-
-        <p className="text-center text-slate-600 text-sm mt-8">
-          Don't have an account? <span className="text-yellow-500 font-medium cursor-pointer">Sign Up</span>
-        </p>
-      </motion.div>
-    </div>
-  );
-};
-
-const TopUpView = ({ onBuy }: any) => (
-  <motion.div 
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="p-4 pb-24 space-y-4"
-  >
-    <div className="flex items-center justify-between mb-2">
-      <h2 className="text-xl font-bold text-white">Instant Top-up</h2>
-      <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-md">Server Online</span>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>FF PRO STORE | Official</title>
     
-    <div className="grid grid-cols-2 gap-3">
-      {DIAMOND_PACKS.map((pack) => (
-        <div 
-          key={pack.id} 
-          onClick={() => onBuy(pack.price, `${pack.amount} Diamonds`)}
-          className="group relative bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-3 hover:border-yellow-500/50 transition-all cursor-pointer overflow-hidden"
-        >
-          {pack.tag && (
-            <div className="absolute top-0 right-0 bg-yellow-600 text-[10px] font-bold text-white px-2 py-1 rounded-bl-lg z-10">
-              {pack.tag}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+        body { background-color: #020617; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    </style>
+</head>
+<body x-data="storeApp()" x-init="init()" x-cloak>
+
+    <template x-if="!isLoggedIn">
+        <div class="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-slate-950">
+            <div class="absolute -top-24 -right-24 w-96 h-96 bg-orange-600/20 rounded-full blur-[100px]"></div>
+            <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-yellow-600/10 rounded-full blur-[100px]"></div>
+
+            <div class="w-full max-w-sm z-10">
+                <div class="text-center mb-10">
+                    <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-2xl mx-auto flex items-center justify-center shadow-2xl mb-4">
+                        <i data-lucide="flame" class="w-10 h-10 text-white"></i>
+                    </div>
+                    <h1 class="text-3xl font-black text-white tracking-tighter">FF PRO STORE</h1>
+                    <p class="text-slate-400 mt-2">Premium Gaming Top-up</p>
+                </div>
+
+                <form @submit.prevent="login()" class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase text-slate-500 font-bold ml-1">Player ID</label>
+                        <input required type="text" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-4 text-white focus:border-yellow-500 outline-none transition-all" placeholder="Enter Game ID">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase text-slate-500 font-bold ml-1">Password</label>
+                        <input required type="password" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-4 text-white focus:border-yellow-500 outline-none transition-all" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:scale-[1.02] active:scale-95 text-white font-black py-4 rounded-xl shadow-lg transition-all mt-4 flex items-center justify-center gap-2">
+                        <span x-text="loading ? 'Authenticating...' : 'LOGIN TO ACCOUNT'"></span>
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
+                </form>
             </div>
-          )}
-          <div className="relative">
-            <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
-            <Gem className="w-10 h-10 text-cyan-400 relative z-10 drop-shadow-md" />
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-black text-white">{pack.amount}</div>
-            {pack.bonus > 0 && <div className="text-[10px] text-yellow-400 font-medium">+{pack.bonus} Bonus</div>}
-          </div>
-          <div className="w-full mt-1">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <span className="text-xs text-slate-500 line-through">₹{pack.originalPrice}</span>
-              <span className="text-sm font-bold text-white">₹{pack.price}</span>
-            </div>
-            <div className="w-full py-1.5 bg-slate-800 rounded-lg text-center text-xs font-bold text-slate-300 group-hover:bg-yellow-500 group-hover:text-black transition-colors">
-              BUY NOW
-            </div>
-          </div>
         </div>
-      ))}
-    </div>
-  </motion.div>
-);
+    </template>
 
-const MembershipView = ({ onBuy }: any) => (
-  <motion.div 
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="p-4 pb-24 space-y-6"
-  >
-    <h2 className="text-xl font-bold text-white">Premium Memberships</h2>
+    <template x-if="isLoggedIn">
+        <div class="max-w-md mx-auto min-h-screen flex flex-col relative">
+            
+            <header class="sticky top-0 z-50 w-full glass border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-orange-500 to-yellow-500 flex items-center justify-center border border-white/20">
+                        <i data-lucide="user" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xs font-black text-white leading-none uppercase" x-text="user.name"></h2>
+                        <p class="text-[10px] text-slate-500 mt-1" x-text="'ID: ' + user.gameId"></p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <a href="https://t.me/rajeshff01" target="_blank" class="p-2 bg-blue-600/10 rounded-full text-blue-400 border border-blue-600/20">
+                        <i data-lucide="headphones" class="w-4 h-4"></i>
+                    </a>
+                    <div @click="activeTab = 'deposit'" class="flex items-center gap-1.5 bg-slate-800/50 px-3 py-2 rounded-full border border-slate-700 cursor-pointer">
+                        <i data-lucide="wallet" class="w-4 h-4 text-emerald-400"></i>
+                        <span class="text-xs font-bold text-white" x-text="'₹' + balance"></span>
+                    </div>
+                </div>
+            </header>
 
-    {MEMBERSHIPS.map((plan) => (
-      <div key={plan.id} className="relative overflow-hidden rounded-2xl">
-        <div className={cn("absolute inset-0 bg-gradient-to-br opacity-10", plan.color)} />
-        <div className="relative bg-slate-900/80 backdrop-blur-sm border border-slate-800 p-5 rounded-2xl">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-3">
-              <div className={cn("p-3 rounded-xl bg-gradient-to-br shadow-lg", plan.color)}>
-                {plan.icon}
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-lg">{plan.title}</h3>
-                <p className="text-slate-400 text-xs">Reset daily at 03:00 AM</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="mt-6 flex items-center justify-between">
-            <div className="space-y-1">
-               <p className="text-xs text-slate-400 uppercase tracking-wide">Total Rewards</p>
-               <p className="text-2xl font-black text-white flex items-center gap-1">
-                 {plan.totalDiamonds} <Gem className="w-4 h-4 text-cyan-400" />
-               </p>
-            </div>
-            <div className="text-right space-y-1">
-               <p className="text-xs text-slate-400 uppercase tracking-wide">Daily Claim</p>
-               <p className="text-white font-bold">{plan.daily} / day</p>
-            </div>
-          </div>
+            <main class="flex-1 pb-28">
+                
+                <section x-show="activeTab === 'topup'" class="p-4 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-white flex items-center gap-2">
+                            <i data-lucide="zap" class="w-4 h-4 text-yellow-500"></i> Instant Top-up
+                        </h3>
+                        <span class="text-[10px] bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded border border-emerald-500/20 uppercase font-bold">Online</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <template x-for="pack in packs" :key="pack.id">
+                            <div @click="buyPack(pack)" class="group bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-2 hover:border-yellow-500 transition-all active:scale-95 cursor-pointer relative overflow-hidden">
+                                <div x-show="pack.tag" class="absolute top-0 right-0 bg-yellow-500 text-[9px] font-black text-black px-2 py-0.5 rounded-bl-lg" x-text="pack.tag"></div>
+                                <i data-lucide="gem" class="w-10 h-10 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]"></i>
+                                <div class="text-center">
+                                    <div class="text-xl font-black text-white" x-text="pack.amount"></div>
+                                    <div class="text-[10px] text-yellow-500 font-bold" x-text="'+' + pack.bonus + ' Bonus'"></div>
+                                </div>
+                                <div class="w-full bg-slate-800 py-2 rounded-lg text-center font-bold text-sm group-hover:bg-yellow-500 group-hover:text-black transition-colors" x-text="'₹' + pack.price"></div>
+                            </div>
+                        </template>
+                    </div>
+                </section>
 
-          <div className="mt-6 flex items-center gap-4">
-             <div className="flex flex-col">
-               <span className="text-xs text-slate-500 line-through">₹{plan.originalPrice}</span>
-               <span className="text-xl font-bold text-yellow-500">₹{plan.price}</span>
-             </div>
-             <button 
-              onClick={() => onBuy(plan.price, plan.title)}
-              className={cn("flex-1 py-3 rounded-xl font-bold text-white shadow-lg bg-gradient-to-r active:scale-95 transition-all", plan.color)}
-             >
-               Subscribe
-             </button>
-          </div>
+                <section x-show="activeTab === 'membership'" class="p-4 space-y-4">
+                    <h3 class="font-bold text-white">Premium Plans</h3>
+                    <template x-for="plan in memberships">
+                        <div class="relative bg-slate-900 border border-slate-800 rounded-2xl p-5 overflow-hidden mb-4">
+                            <div class="flex justify-between items-start relative z-10">
+                                <div class="flex items-center gap-3">
+                                    <div :class="plan.color" class="p-3 rounded-xl shadow-lg">
+                                        <i :data-lucide="plan.icon" class="w-6 h-6 text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-white" x-text="plan.title"></h4>
+                                        <p class="text-[10px] text-slate-500">Daily Rewards at 03:00 AM</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6 flex justify-between items-end relative z-10">
+                                <div>
+                                    <p class="text-[10px] text-slate-500 uppercase font-bold">Total Diamonds</p>
+                                    <p class="text-2xl font-black text-white" x-text="plan.total"></p>
+                                </div>
+                                <button @click="buyPack({price: plan.price})" :class="plan.color" class="px-6 py-2.5 rounded-xl font-bold text-white text-sm shadow-lg active:scale-95 transition-all">
+                                    Subscribe ₹<span x-text="plan.price"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </section>
+
+                <section x-show="activeTab === 'deposit'" class="p-4 space-y-6">
+                    <h3 class="font-bold text-white">Add Funds</h3>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center">
+                        <p class="text-slate-400 text-xs mb-4 uppercase font-bold tracking-widest">Enter Deposit Amount</p>
+                        <div class="flex items-center justify-center gap-2 mb-8">
+                            <span class="text-3xl font-bold text-slate-600">₹</span>
+                            <input type="number" x-model="depAmount" class="bg-transparent text-5xl font-black text-white w-40 text-center outline-none" placeholder="0">
+                        </div>
+                        <button @click="goToPayment()" :disabled="!depAmount || depAmount <= 0" class="w-full bg-emerald-500 disabled:opacity-50 text-white font-black py-4 rounded-xl shadow-lg shadow-emerald-900/20 active:scale-95 transition-all uppercase tracking-tight">Proceed to Pay</button>
+                    </div>
+                </section>
+
+                <section x-show="activeTab === 'payment_screen'" class="p-4 space-y-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <button @click="activeTab = 'deposit'" class="p-2 text-slate-400"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+                        <h3 class="font-bold text-white">Secure Payment</h3>
+                    </div>
+                    <div class="bg-white rounded-3xl p-8 flex flex-col items-center gap-4 text-black">
+                        <p class="font-black text-3xl tracking-tighter" x-text="'₹' + depAmount"></p>
+                        <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=Rajesh@upi&am=' + depAmount" class="w-52 h-52">
+                        <p class="text-[10px] text-slate-500 font-bold text-center uppercase">Scan with PhonePe, GPay, or Paytm</p>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-xs font-bold text-slate-500 uppercase ml-1">Enter 12-Digit UTR Number</label>
+                        <input type="text" x-model="utr" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-4 text-white outline-none focus:border-yellow-500" placeholder="1234XXXXXXXX">
+                        <button @click="submitPayment()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl active:scale-95 transition-all">VERIFY & SUBMIT</button>
+                    </div>
+                </section>
+
+            </main>
+
+            <nav class="fixed bottom-0 w-full max-w-md glass border-t border-slate-800 px-2 py-3 flex justify-around">
+                <button @click="activeTab = 'topup'" :class="activeTab === 'topup' ? 'text-yellow-500' : 'text-slate-500'" class="flex flex-col items-center gap-1 w-1/3 transition-colors">
+                    <i data-lucide="gem" class="w-6 h-6"></i>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">Top-Up</span>
+                </button>
+                <button @click="activeTab = 'membership'" :class="activeTab === 'membership' ? 'text-yellow-500' : 'text-slate-500'" class="flex flex-col items-center gap-1 w-1/3 transition-colors">
+                    <i data-lucide="crown" class="w-6 h-6"></i>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">Member</span>
+                </button>
+                <button @click="activeTab = 'deposit'" :class="activeTab === 'deposit' ? 'text-yellow-500' : 'text-slate-500'" class="flex flex-col items-center gap-1 w-1/3 transition-colors">
+                    <i data-lucide="wallet" class="w-6 h-6"></i>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">Wallet</span>
+                </button>
+            </nav>
         </div>
-      </div>
-    ))}
-  </motion.div>
-);
+    </template>
 
-const DepositView = ({ onDeposit }: any) => {
-  const [step, setStep] = useState<'select' | 'payment' | 'success'>('select');
-  const [amount, setAmount] = useState<string>('');
-  const [utr, setUtr] = useState('');
-  const [error, setError] = useState('');
+    <script>
+        function storeApp() {
+            return {
+                isLoggedIn: false,
+                loading: false,
+                activeTab: 'topup',
+                balance: 0,
+                depAmount: '',
+                utr: '',
+                user: { name: 'ProGamer_99', gameId: '283746519' },
+                
+                packs: [
+                    { id: 1, amount: 100, bonus: 10, price: 80, tag: 'Best Seller' },
+                    { id: 2, amount: 310, bonus: 31, price: 240, tag: 'Popular' },
+                    { id: 3, amount: 520, bonus: 52, price: 400, tag: 'Value' },
+                    { id: 4, amount: 1060, bonus: 106, price: 800, tag: null },
+                    { id: 5, amount: 2180, bonus: 218, price: 1600, tag: 'Pro' },
+                    { id: 6, amount: 5600, bonus: 560, price: 4000, tag: 'Whale' }
+                ],
 
-  const handleSelectSubmit = () => {
-    if (Number(amount) > 0) {
-      setStep('payment');
-    }
-  };
+                memberships: [
+                    { title: 'Weekly Pack', total: 450, price: 159, color: 'bg-blue-600', icon: 'gem' },
+                    { title: 'Monthly Pack', total: 2600, price: 799, color: 'bg-orange-600', icon: 'crown' }
+                ],
 
-  const handlePaymentSubmit = () => {
-    if (!utr) {
-      setError('Enter UTR Code');
-      return;
-    }
-    // Validate UTR: Only numbers allowed
-    const isNumeric = /^\d+$/.test(utr);
-    if (!isNumeric) {
-      setError('Check UTR code');
-      return;
-    }
-    
-    setError('');
-    setStep('success');
-    // In a real app, you would send the data to the server here
-  };
+                login() {
+                    this.loading = true;
+                    setTimeout(() => {
+                        this.isLoggedIn = true;
+                        this.loading = false;
+                        this.refreshIcons();
+                    }, 1200);
+                },
 
-  if (step === 'success') {
-    return (
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="p-8 pb-24 flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6"
-      >
-        <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mb-2">
-          <CheckCircle2 className="w-12 h-12 text-green-500" />
-        </div>
-        <h2 className="text-2xl font-bold text-white">Payment Submitted</h2>
-        <p className="text-slate-400 text-lg">please wait 5-10 minutes</p>
-      </motion.div>
-    );
-  }
+                goToPayment() {
+                    this.activeTab = 'payment_screen';
+                    this.refreshIcons();
+                },
 
-  if (step === 'payment') {
-    return (
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="p-4 pb-24 space-y-6"
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <button onClick={() => setStep('select')} className="p-2 -ml-2 text-slate-400 hover:text-white">
-             <ChevronRight className="w-6 h-6 rotate-180" />
-          </button>
-          <h2 className="text-xl font-bold text-white">Payment System</h2>
-        </div>
+                submitPayment() {
+                    if(this.utr.length < 10) {
+                        alert("Please enter a valid UTR number");
+                        return;
+                    }
+                    alert("Payment submitted! Please wait 5-10 minutes for verification.");
+                    this.activeTab = 'topup';
+                    this.utr = '';
+                    this.depAmount = '';
+                },
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center gap-6">
-          <div className="text-center">
-             <p className="text-slate-400 text-sm mb-1">Total Amount</p>
-             <p className="text-3xl font-black text-yellow-500">₹{amount}</p>
-          </div>
+                buyPack(pack) {
+                    if (this.balance < pack.price) {
+                        alert("Insufficient Balance! Please add funds first.");
+                        this.activeTab = 'deposit';
+                    } else {
+                        alert("Processing your Top-up...");
+                    }
+                },
 
-          {/* Placeholder for user's QR Code */}
-          <div className="bg-white p-4 rounded-xl">
-             {/* Replace this src with your actual QR code URL if needed */}
-             <img 
-               src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=example@upi" 
-               alt="Payment QR" 
-               className="w-48 h-48 object-contain mix-blend-multiply"
-             />
-          </div>
-          
-          <p className="text-xs text-slate-500 text-center max-w-[250px]">
-            Scan this QR code to pay using any UPI app (PhonePe, Paytm, GPay)
-          </p>
-        </div>
+                refreshIcons() {
+                    this.$nextTick(() => lucide.createIcons());
+                },
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-xs uppercase text-slate-500 font-bold tracking-wider ml-1">UTR / Reference No.</label>
-            <input 
-              type="text"
-              inputMode="numeric"
-              value={utr}
-              onChange={(e) => {
-                setUtr(e.target.value);
-                if (error) setError('');
-              }}
-              placeholder="Enter 12-digit UTR"
-              className={cn(
-                "w-full bg-slate-900 border rounded-xl px-4 py-4 text-white placeholder-slate-600 focus:outline-none transition-colors",
-                error ? "border-red-500 focus:border-red-500" : "border-slate-800 focus:border-yellow-500"
-              )}
-            />
-            {error && (
-              <div className="flex items-center gap-1.5 text-red-500 text-xs font-medium ml-1">
-                <AlertCircle className="w-3.5 h-3.5" />
-                {error}
-              </div>
-            )}
-          </div>
-
-          <button 
-            onClick={handlePaymentSubmit}
-            className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-900/20 active:scale-[0.98] transition-all"
-          >
-            Submit Payment
-          </button>
-        </div>
-      </motion.div>
-    );
-  }
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="p-4 pb-24 space-y-6"
-    >
-      <h2 className="text-xl font-bold text-white">Add Funds</h2>
-
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center">
-        <p className="text-slate-400 text-sm mb-2">Enter Amount to Deposit</p>
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <span className="text-3xl font-bold text-slate-500">₹</span>
-          <input 
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0"
-            className="bg-transparent text-4xl font-bold text-white w-32 text-center focus:outline-none placeholder-slate-700"
-          />
-        </div>
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[100, 500, 1000].map(val => (
-            <button 
-              key={val} 
-              onClick={() => setAmount(val.toString())}
-              className="py-2 bg-slate-800 rounded-lg text-slate-300 font-medium hover:bg-slate-700 transition-colors"
-            >
-              ₹{val}
-            </button>
-          ))}
-        </div>
-        <button 
-          onClick={handleSelectSubmit}
-          disabled={!amount || Number(amount) <= 0}
-          className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-900/20 transition-all"
-        >
-          Confirm
-        </button>
-      </div>
-
-      <div className="space-y-3">
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Payment Methods</p>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-          {[ 
-            { icon: <QrCode className="w-5 h-5" />, name: 'UPI / QR Code', sub: 'Instant Credit' },
-            { icon: <CreditCard className="w-5 h-5" />, name: 'Card Payment', sub: 'Visa, Master' },
-            { icon: <Wallet className="w-5 h-5" />, name: 'Paytm Wallet', sub: 'Link Wallet' },
-          ].map((method, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 border-b border-slate-800 last:border-0 hover:bg-slate-800/50 cursor-pointer">
-              <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-300">
-                {method.icon}
-              </div>
-              <div>
-                <p className="text-white font-medium">{method.name}</p>
-                <p className="text-xs text-slate-500">{method.sub}</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-slate-600 ml-auto" />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex items-start gap-3 bg-blue-900/20 border border-blue-900/50 p-4 rounded-xl">
-        <ShieldCheck className="w-6 h-6 text-blue-400 shrink-0" />
-        <p className="text-xs text-blue-200 leading-relaxed">
-          All payments are secured with 256-bit encryption. Funds are added to your wallet instantly after successful payment.
-        </p>
-      </div>
-    </motion.div>
-  );
-}
-
-// --- Main Page Component ---
-
-export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState('topup');
-  const [balance, setBalance] = useState(0);
-  const [user, setUser] = useState({ name: 'ProGamer_99', gameId: '283746519' });
-
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setActiveTab('topup');
-  };
-
-  const handleDeposit = (amount: number) => {
-    //
+                init() {
+                    lucide.createIcons();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
